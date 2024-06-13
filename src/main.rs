@@ -20,37 +20,36 @@ fn convert_webp_to_png(input_path: &Path, output_path: &Path) -> Result<(), Imag
 #[derive(Parser)]
 #[command(name = "resize", version, about)]
 struct Cli {
-    #[clap(short = 'i', long = "input_dir", default_value = "./images")]
+    #[arg(short = 'i', long = "input", default_value = "./images")]
     input_dir: String,
-    #[clap(short = 'o', long = "output_dir", default_value = "./thumbnails")]
+    #[arg(short = 'o', long = "output", default_value = "./thumbnails")]
     output_dir: String,
-    #[clap(short = 'W', long = "width", default_value = "200")]
+    #[arg(short = 'W', long = "width", default_value = "200")]
     width: u32,
-    #[clap(short = 'H', long = "height", default_value = "200")]
+    #[arg(short = 'H', long = "height", default_value = "200")]
     height: u32,
+    #[arg(short = 'e', long = "extension", default_value = "webp")]
+    extension: String,
 }
 
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Define the command line arguments using clap
     let cli = Cli::parse();
 
     let input_dir = cli.input_dir;
     let output_dir = cli.output_dir;
     let thumbnail_width: u32 = cli.width;
     let thumbnail_height: u32 = cli.height;
+    let extension = cli.extension;
 
     // Create the output directory if it doesn't exist
     fs::create_dir_all(&output_dir)?;
 
-    // Use glob to iterate over all image files in the input directory
-    let pattern = format!("{}/[0-9]*.png", &input_dir);
+    // Use glob to iterate over all image files in the input directory by extension
+    let pattern = format!("{}/[0-9]*.{}", input_dir, extension);
+
     for entry in glob(&pattern)? {
         match entry {
             Ok(path) => {
-                let path = path.canonicalize()?; // Convert to absolute path
-                println!("{:?}", path);
-
                 let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("");
                 let output_path = Path::new(&output_dir).join(path.file_stem().unwrap()).with_extension("png");
 
@@ -61,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
 
-                match resize_image(&output_path, &output_path, thumbnail_width, thumbnail_height) {
+                match resize_image(&path, &output_path, thumbnail_width, thumbnail_height) {
                     Ok(_) => println!("Resized image saved to {:?}", output_path),
                     Err(e) => eprintln!("Failed to resize image {}: {}", path.display(), e),
                 }
