@@ -28,7 +28,7 @@ struct Cli {
     width: u32,
     #[arg(short = 'H', long = "height", default_value = "200")]
     height: u32,
-    #[arg(short = 'e', long = "extension", default_value = "webp")]
+    #[arg(short = 'e', long = "extension", default_value = ".jpg")]
     extension: String,
 }
 
@@ -45,13 +45,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir_all(&output_dir)?;
 
     // Use glob to iterate over all image files in the input directory by extension
-    let pattern = format!("{}/[0-9]*.{}", input_dir, extension);
+    let pattern = format!("{}/*{}", input_dir, extension);
 
     for entry in glob(&pattern)? {
         match entry {
             Ok(path) => {
                 let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("");
-                let output_path = Path::new(&output_dir).join(path.file_stem().unwrap()).with_extension("png");
+                let output_path = Path::new(&output_dir).join(path.file_stem().unwrap()).with_extension(&extension);
 
                 if extension == "webp" {
                     match convert_webp_to_png(&path, &output_path) {
