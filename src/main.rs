@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match entry {
             Ok(path) => {
                 let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("");
-                let output_path = Path::new(&output_dir).join(path.file_stem().unwrap()).with_extension(&extension);
+                let output_path = Path::new(&output_dir).join(path.file_stem().unwrap()).with_extension(extension);
 
                 if extension == "webp" {
                     match convert_webp_to_png(&path, &output_path) {
